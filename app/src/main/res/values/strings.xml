@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">UssdProject</string>
+    <string name="refuse_permissions">Please allow call permission</string>
+</resources>
