@@ -10,12 +10,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.arad.ussdlibrary.USSDApi
 import com.arad.ussdlibrary.USSDController
+import com.example.ussdproject.common.Constant.disable_forWardCall
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.consumeAsFlow
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.HashMap
 import java.util.HashSet
@@ -39,7 +37,6 @@ class ForwardViewModel @Inject constructor(
     val enabled = MutableLiveData<Boolean>(true)
     val enable:LiveData<Boolean> =enabled
 
-
     init {
         handleIntent()
     }
@@ -52,10 +49,7 @@ class ForwardViewModel @Inject constructor(
                     is MainIntent.DisableIntent -> disable()
                 }
             }}
-
-
-
-        }
+    }
 
 
     private fun forward(phoneNumber:String) {
@@ -82,7 +76,7 @@ class ForwardViewModel @Inject constructor(
 
             enabled.value = false
             ussdApi.callUSSDInvoke(
-                "#21#",
+                disable_forWardCall,
                 map,
                 object : USSDController.CallbackInvoke {
                     override fun responseInvoke(message: String) {
@@ -106,8 +100,10 @@ class ForwardViewModel @Inject constructor(
 
     sealed class MainIntent {
         data class  ForWardIntent(var message:String) : MainIntent()
-        object  DisableIntent  : MainIntent()
+        object  DisableIntent :MainIntent()
     }
+
+
 }
 
 

@@ -8,13 +8,16 @@ import android.content.pm.PackageManager
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.AlertDialog
 import androidx.compose.material.Button
 import androidx.compose.material.Text
+import androidx.compose.material.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -54,5 +57,61 @@ public fun checkForPermissions(context: Context): Boolean {
     }
 
     return true
+}
+
+
+
+@Composable
+fun AlertDialogComponent(openDialog: () -> Unit) {
+
+
+    AlertDialog(
+        // on dialog dismiss we are setting
+        // our dialog value to false.
+        onDismissRequest = openDialog,
+
+        // below line is use to display title of our dialog
+        // box and we are setting text color to white.
+        title = { Text(text = "Geeks for Geeks", color = Color.White) },
+
+        // below line is use to display
+        // description to our alert dialog.
+        text = { Text("Hello! This is our Alert Dialog..", color = Color.White) },
+
+        // in below line we are displaying
+        // our confirm button.
+        confirmButton = {
+            // below line we are adding on click
+            // listener for our confirm button.
+            TextButton(
+                onClick =  openDialog
+
+
+            ) {
+                // in this line we are adding
+                // text for our confirm button.
+                Text("Confirm", color = Color.White)
+            }
+        },
+        // in below line we are displaying
+        // our dismiss button.
+        dismissButton = {
+            // in below line we are displaying
+            // our text button
+            TextButton(
+                // adding on click listener for this button
+                onClick = openDialog
+
+            ) {
+                // adding text to our button.
+                Text("Dismiss", color = Color.White)
+            }
+        },
+        // below line is use to add background color to our alert dialog
+        backgroundColor = colorResource(id = R.color.teal_200),
+
+        // below line is use to add content color for our alert dialog.
+        contentColor = Color.White
+    )
 }
 

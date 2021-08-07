@@ -3,6 +3,7 @@ package com.example.ussdproject
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.material.*
 import com.example.ussdproject.ui.navigation.Nav_graph
 import com.example.ussdproject.ui.theme.Purple200
@@ -21,6 +22,7 @@ class MainActivity : ComponentActivity() {
 
     }
 
+    @ExperimentalAnimationApi
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -34,6 +36,10 @@ class MainActivity : ComponentActivity() {
 
 
 }
+
+
+
+
 
 
 

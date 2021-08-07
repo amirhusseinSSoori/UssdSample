@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">UssdProject</string>
     <string name="refuse_permissions">Please allow call permission</string>
+    <string name="enter_number">شماره مورد نظر را وارد نمایید</string>
+    <string name="forward">Forward</string>
+    <string name="disable">Disable</string>
 </resources>
