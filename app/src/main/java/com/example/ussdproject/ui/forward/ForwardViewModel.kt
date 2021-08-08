@@ -12,6 +12,7 @@ import androidx.lifecycle.viewModelScope
 import com.arad.ussdlibrary.USSDApi
 import com.arad.ussdlibrary.USSDController
 import com.example.ussdproject.common.Constant.disable_forWardCall
+import com.example.ussdproject.ui.base.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
@@ -25,32 +26,35 @@ import javax.inject.Inject
 class ForwardViewModel @Inject constructor(
     var ussdApi: USSDApi,
     var map: HashMap<String, HashSet<String>>
-) : ViewModel() {
-    private val mystate = MutableStateFlow<String>("")
+) :   BaseViewModel<ForwardContract.Event, ForwardContract.State, ForwardContract.Effect>() {
 
-    val userIntent = Channel<MainIntent>(Channel.UNLIMITED)
+
+//    val userIntent = Channel<MainIntent>(Channel.UNLIMITED)
     private val _state = MutableStateFlow<MainState>(MainState.Idle)
     val state: StateFlow<MainState>
         get() = _state
 
+    override fun createInitialState(): ForwardContract.State {
+        return ForwardContract.State(
+            ForwardContract.ForwardState.Idle
+        )
+    }
+
+    override fun handleEvent(event: ForwardContract.Event) {
+        when (event) {
+            is ForwardContract.Event.ForWardEvent -> {
+                forward(event.message)
+            }
+            is ForwardContract.Event.DisableEvent -> {
+               disable()
+            }
+            else -> Unit
+        }
+    }
 
 
     val enabled = MutableLiveData<Boolean>(true)
     val enable:LiveData<Boolean> =enabled
-
-    init {
-        handleIntent()
-    }
-
-    private fun handleIntent() {
-        viewModelScope.launch {
-            userIntent.consumeAsFlow().collect {
-                when (it) {
-                    is MainIntent.ForWardIntent -> forward(it.message)
-                    is MainIntent.DisableIntent -> disable()
-                }
-            }}
-    }
 
 
     private fun forward(phoneNumber:String) {
@@ -63,7 +67,8 @@ class ForwardViewModel @Inject constructor(
                     override fun responseInvoke(message: String) {
                     }
                     override fun over(message: String) {
-                       _state.value= MainState.ForWard(message)
+                        setState { copy(state = ForwardContract.ForwardState.Forward(status = message)) }
+                        setEffect { ForwardContract.Effect.Dialog(message) }
                         enabled.value = true
 
                     }
@@ -72,7 +77,7 @@ class ForwardViewModel @Inject constructor(
         }
     }
 
-    private fun disable() {
+     fun disable() {
         viewModelScope.launch {
             enabled.value = false
             ussdApi.callUSSDInvoke(
@@ -82,7 +87,9 @@ class ForwardViewModel @Inject constructor(
                     override fun responseInvoke(message: String) {
                     }
                     override fun over(message: String) {
-                         _state.value= MainState.Disable(message)
+//                        setState { copy(state = ForwardContract.ForwardState.Disable(status = message)) }
+//                        setEffect { ForwardContract.Effect.Dialog(message) }
+                        _state.value=MainState.Disable(message)
                           enabled.value = true
 
                     }
@@ -97,11 +104,12 @@ class ForwardViewModel @Inject constructor(
         data class Disable(var disable: String) : MainState()
     }
 
+//
+//    sealed class MainIntent {
+//        data class  ForWardIntent(var message:String) : MainIntent()
+//        object  DisableIntent :MainIntent()
+//    }
 
-    sealed class MainIntent {
-        data class  ForWardIntent(var message:String) : MainIntent()
-        object  DisableIntent :MainIntent()
-    }
 
 }
 

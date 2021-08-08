@@ -15,66 +15,56 @@ import androidx.compose.ui.res.stringResource
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.ussdproject.ui.forward.Forward
-import com.example.ussdproject.ui.forward.ForwardViewModel
 import com.example.ussdproject.ui.intro.Intro
 import kotlinx.coroutines.delay
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import com.arad.ussdlibrary.USSDApi
 import com.arad.ussdlibrary.USSDController
 import com.example.ussdproject.R
+import com.example.ussdproject.common.Constant
 import com.example.ussdproject.common.Constant.input_number
-import com.example.ussdproject.ui.forward.alertShowDetails
-import com.example.ussdproject.ui.forward.modify
+import com.example.ussdproject.ui.forward.*
 import com.example.ussdproject.util.AlertDialogComponent
+import com.example.ussdproject.util.alertShowDetails
 import com.example.ussdproject.util.checkForPermissions
+import com.example.ussdproject.util.modify
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import com.google.accompanist.navigation.animation.composable
 import kotlinx.coroutines.launch
+import java.util.HashMap
+import java.util.HashSet
 
 
 @ExperimentalAnimationApi
 @Composable
-fun Nav_graph() {
+fun Nav_graph(map: HashMap<String, HashSet<String>>, ussdApi: USSDApi) {
     val navController = rememberAnimatedNavController()
-    val viewModel = hiltViewModel<ForwardViewModel>()
     val scope = rememberCoroutineScope()
     val ctx = LocalContext.current
 
-
-
-
-    observeViewModel(viewModel)
-
-
-
-
     AnimatedNavHost(navController = navController, startDestination = NavScreen.Intro.route) {
         composable(NavScreen.Intro.route,
-        enterTransition = { initial, _ ->
-            when (initial.destination.route) {
-                NavScreen.Forward.route ->
-                    slideInHorizontally(
-                        initialOffsetX = { 700 },
-                        animationSpec = tween(700)
-                    ) + fadeIn(animationSpec = tween(700))
-                else -> null
-            }
-        }){
+            enterTransition = { initial, _ ->
+                when (initial.destination.route) {
+                    NavScreen.Forward.route ->
+                        slideInHorizontally(
+                            initialOffsetX = { 700 },
+                            animationSpec = tween(700)
+                        ) + fadeIn(animationSpec = tween(700))
+                    else -> null
+                }
+            }) {
             Intro()
             scope.launch {
                 delay(3000)
                 navController.navigate(NavScreen.Forward.route) {
-                    popUpTo(NavScreen.Intro.route){ inclusive = true }
+                    popUpTo(NavScreen.Intro.route) { inclusive = true }
                     launchSingleTop = true
                 }
             }
         }
-
-
-
-
         composable(NavScreen.Forward.route,
             exitTransition = { _, target ->
                 when (target.destination.route) {
@@ -86,35 +76,76 @@ fun Nav_graph() {
                     else -> null
                 }
             }) {
-
             val (text, SetText) = remember { mutableStateOf("") }
-            val enableButton by viewModel.enable.observeAsState()
             var enable by remember { mutableStateOf(true) }
-            enableButton.let { enable = it!! }
+            var enableDialog by remember { mutableStateOf(false) }
+            var textDialog by remember { mutableStateOf("") }
 
 
 
 
             Surface(color = MaterialTheme.colors.background) {
-                Forward(text = text, onTextChange = SetText,
+                if (enableDialog) {
+                    AlertDialogComponent(openDialog = {
+                        enableDialog = false
+                    },textDialog)
+
+                }
+
+
+
+                Forward(
+                    text = text, onTextChange = SetText,
                     ussdCall = {
                         checkAccesses(ctx = ctx, permission = {
                             if (text.trim() != "") {
-                                scope.launch { viewModel.userIntent.send(ForwardViewModel.MainIntent.ForWardIntent(text))}
+                                enable = false
+                                ussdApi.callUSSDInvoke(
+                                    "*21*$text#",
+                                    map,
+                                    object : USSDController.CallbackInvoke {
+                                        override fun responseInvoke(message: String) {
+                                        }
+
+                                        override fun over(message: String) {
+
+//                                            alertShowDetails(ctx = ctx, modify(message))
+                                            enableDialog = true
+                                            textDialog = message
+                                            enable = true
+
+                                        }
+                                    }, 0
+                                )
                             } else {
-                                Toast.makeText(it,input_number, Toast.LENGTH_SHORT).show() }
+                                Toast.makeText(it, input_number, Toast.LENGTH_SHORT).show()
+                            }
                         })
                     },
                     disableCall = {
-                        checkAccesses( ctx = ctx,permission = {
+                        checkAccesses(ctx = ctx, permission = {
+                            enable = false
                             scope.launch {
-                                viewModel.userIntent.send(ForwardViewModel.MainIntent.DisableIntent)
+                                ussdApi.callUSSDInvoke(
+                                    Constant.disable_forWardCall,
+                                    map,
+                                    object : USSDController.CallbackInvoke {
+                                        override fun responseInvoke(message: String) {
+                                        }
+
+                                        override fun over(message: String) {
+                                            enable = true
+                                            enableDialog = true
+                                            textDialog = message
+//                                            alertShowDetails(ctx = ctx, modify(message))
+                                        }
+                                    }, 0
+                                )
                             }
 
 
                         })
                     },
-
                     enable
                 )
 
@@ -129,7 +160,7 @@ fun Nav_graph() {
 }
 
 
-fun checkAccesses( ctx: Context,permission: (ctx:Context) -> Unit) {
+fun checkAccesses(ctx: Context, permission: (ctx: Context) -> Unit) {
     if (checkForPermissions(ctx) && USSDController.verifyAccesibilityAccess(
             ctx
         )
@@ -137,25 +168,6 @@ fun checkAccesses( ctx: Context,permission: (ctx:Context) -> Unit) {
         permission(ctx)
     }
 }
-
-@Composable
-private fun observeViewModel(forwardViewModel: ForwardViewModel) {
-    val ctx = LocalContext.current
-    val data by forwardViewModel.state.collectAsState()
-    data.let {
-        when (it) {
-            is ForwardViewModel.MainState.Idle -> Unit
-            is ForwardViewModel.MainState.ForWard -> {
-                alertShowDetails(ctx, modify(it.call))
-            }
-            is ForwardViewModel.MainState.Disable -> {
-                alertShowDetails(ctx,modify(it.disable))
-            }
-
-        }
-    }
-}
-
 
 
 sealed class NavScreen(val route: String) {

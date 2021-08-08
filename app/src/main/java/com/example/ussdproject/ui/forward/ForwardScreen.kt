@@ -38,6 +38,8 @@ import android.graphics.drawable.ColorDrawable
 import android.view.LayoutInflater
 import android.widget.TextView
 import com.example.ussdproject.util.AlertDialogComponent
+import com.example.ussdproject.util.alertShowDetails
+import com.example.ussdproject.util.modify
 
 
 @Composable
@@ -161,56 +163,11 @@ fun CardUssd(
                     textAlign = TextAlign.Center
                 )
 
-            }
-
-        }
-
-
+            } }
     }
-
 }
 
 
-fun modify(str: String): String {
-    var resualt = " "
-    val substrings = str.split(" ").toTypedArray()
-    for (s in substrings) {
-        if (s == "successful.,") {
-            resualt = divert_Active
-        }
-        if (s == "disabled.,") {
-            resualt = divert_NotActive
-        }
-        if (s == "invalid") {
-            resualt = have_problem
-        }
-
-    }
-    return resualt
-
-}
-
- fun alertShowDetails(
-    ctx: Context,
-    Description: String,
-): AlertDialog {
-    val dialogBuilder = AlertDialog.Builder(ctx).create()
-    dialogBuilder.window?.setBackgroundDrawable(ColorDrawable(android.graphics.Color.TRANSPARENT))
-    dialogBuilder.setCancelable(false)
-    val dialogView =
-        LayoutInflater.from(ctx).inflate(R.layout.dialog_show_notify, null)
-    dialogBuilder.window!!.attributes.windowAnimations = R.style.DialogAnimation
-    val close = dialogView.findViewById<TextView>(R.id.btn_dialog_retun)
-    val msg = dialogView.findViewById<TextView>(R.id.txt_dialog_txt_notify)
-    msg.text = Description
-    close.setOnClickListener {
-        dialogBuilder.dismiss()
-
-    }
-    dialogBuilder.setView(dialogView)
-    dialogBuilder.show()
-    return dialogBuilder
-}
 
 
 

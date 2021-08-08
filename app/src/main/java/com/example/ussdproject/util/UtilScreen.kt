@@ -3,10 +3,15 @@ package com.example.ussdproject.util
 
 import android.Manifest
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.drawable.ColorDrawable
+import android.view.LayoutInflater
+import android.widget.TextView
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.AlertDialog
 import androidx.compose.material.Button
@@ -23,12 +28,14 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.ussdproject.R
+import com.example.ussdproject.common.Constant
 
 
 val utilFont = FontFamily(
@@ -59,58 +66,74 @@ public fun checkForPermissions(context: Context): Boolean {
     return true
 }
 
+fun alertShowDetails(
+    ctx: Context,
+    Description: String,
+): AlertDialog {
+    val dialogBuilder = AlertDialog.Builder(ctx).create()
+    dialogBuilder.window?.setBackgroundDrawable(ColorDrawable(android.graphics.Color.TRANSPARENT))
+    dialogBuilder.setCancelable(false)
+    val dialogView =
+        LayoutInflater.from(ctx).inflate(R.layout.dialog_show_notify, null)
+    dialogBuilder.window!!.attributes.windowAnimations = R.style.DialogAnimation
+    val close = dialogView.findViewById<TextView>(R.id.btn_dialog_retun)
+    val msg = dialogView.findViewById<TextView>(R.id.txt_dialog_txt_notify)
+    msg.text = Description
+    close.setOnClickListener {
+        dialogBuilder.dismiss()
+
+    }
+    dialogBuilder.setView(dialogView)
+    dialogBuilder.show()
+    return dialogBuilder
+}
+
+fun modify(str: String): String {
+    var resualt = " "
+    val substrings = str.split(" ").toTypedArray()
+    for (s in substrings) {
+        if (s == "successful.,") {
+            resualt = Constant.divert_Active
+        }
+        if (s == "disabled.,") {
+            resualt = Constant.divert_NotActive
+        }
+        if (s == "invalid") {
+            resualt = Constant.have_problem
+        }
+
+    }
+    return resualt
+
+}
 
 
 @Composable
-fun AlertDialogComponent(openDialog: () -> Unit) {
+fun AlertDialogComponent(openDialog: () -> Unit,message:String) {
 
 
     AlertDialog(
-        // on dialog dismiss we are setting
-        // our dialog value to false.
         onDismissRequest = openDialog,
+        title = { Text(text = "Forward Call",modifier = Modifier.fillMaxWidth(), color = Color.White,fontFamily = utilFont,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center) },
 
-        // below line is use to display title of our dialog
-        // box and we are setting text color to white.
-        title = { Text(text = "Geeks for Geeks", color = Color.White) },
 
-        // below line is use to display
-        // description to our alert dialog.
-        text = { Text("Hello! This is our Alert Dialog..", color = Color.White) },
-
-        // in below line we are displaying
-        // our confirm button.
+        text = { Text(modify(message),modifier = Modifier.fillMaxWidth(), color = Color.White,fontFamily = utilFont,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center) },
         confirmButton = {
-            // below line we are adding on click
-            // listener for our confirm button.
             TextButton(
                 onClick =  openDialog
 
 
             ) {
-                // in this line we are adding
-                // text for our confirm button.
-                Text("Confirm", color = Color.White)
+                Text("بازگشت", color = Color.White,fontFamily = utilFont,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center)
             }
         },
-        // in below line we are displaying
-        // our dismiss button.
-        dismissButton = {
-            // in below line we are displaying
-            // our text button
-            TextButton(
-                // adding on click listener for this button
-                onClick = openDialog
-
-            ) {
-                // adding text to our button.
-                Text("Dismiss", color = Color.White)
-            }
-        },
-        // below line is use to add background color to our alert dialog
-        backgroundColor = colorResource(id = R.color.teal_200),
-
-        // below line is use to add content color for our alert dialog.
+        backgroundColor = colorResource(id = R.color.purple_700),
         contentColor = Color.White
     )
 }
