@@ -42,15 +42,13 @@ import com.example.ussdproject.util.AlertDialogComponent
 
 @Composable
 fun Forward(
-    viewModel: ForwardViewModel,
     text: String,
     onTextChange: (String) -> Unit,
     ussdCall: () -> Unit,
     disableCall: () -> Unit,
     enable: Boolean
-
 ) {
-//    var show by remember { mutableStateOf(true) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -83,11 +81,9 @@ fun Forward(
         CardUssd(
             forwardCall = ussdCall, DisableCall = {
                 disableCall()
-                ;
-
             }, enabled = enable
         )
-        observeViewModel(viewModel)
+
 
     }
 
@@ -99,7 +95,7 @@ fun Forward(
 fun CardUssd(
     forwardCall: () -> Unit,
     DisableCall: () -> Unit,
-    enabled: Boolean
+    enabled: Boolean,
 ) {
     Row(modifier = Modifier.padding(20.dp)) {
         Card(
@@ -122,7 +118,9 @@ fun CardUssd(
                 modifier = Modifier
                     .clickable(
                         enabled = enabled,
-                        onClick = DisableCall
+                        onClick = {
+                            DisableCall()
+                        }
                     )
                     .background(disableColor)
             ) {
@@ -133,9 +131,7 @@ fun CardUssd(
                 )
 
             }
-
         }
-
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -166,42 +162,11 @@ fun CardUssd(
                 )
 
             }
+
         }
 
 
     }
-
-}
-
-
-@Composable
-fun DescriptionCall(message: String) {
-    Text(
-        text = message, color = black, fontFamily = utilFont,
-        fontWeight = FontWeight.Bold,
-        textAlign = TextAlign.Center
-    )
-
-}
-
-
-@Composable
-private fun observeViewModel(forwardViewModel: ForwardViewModel) {
-
-    val ctx = LocalContext.current
-    val data by forwardViewModel.state.collectAsState()
-    data.let {
-        when (it) {
-            is ForwardViewModel.MainState.Idle -> Unit
-            is ForwardViewModel.MainState.ForWard -> { }
-            is ForwardViewModel.MainState.Disable -> {
-                Toast.makeText(ctx, modify(it.disable), Toast.LENGTH_SHORT).show()
-
-            }
-
-        }
-    }
-
 
 }
 
@@ -225,11 +190,10 @@ fun modify(str: String): String {
 
 }
 
-private fun alertShowDetails(
+ fun alertShowDetails(
     ctx: Context,
     Description: String,
-
-    ): AlertDialog {
+): AlertDialog {
     val dialogBuilder = AlertDialog.Builder(ctx).create()
     dialogBuilder.window?.setBackgroundDrawable(ColorDrawable(android.graphics.Color.TRANSPARENT))
     dialogBuilder.setCancelable(false)

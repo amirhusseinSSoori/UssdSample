@@ -1,9 +1,10 @@
 package com.example.ussdproject.ui.forward
 
 import android.util.Log
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import android.widget.Toast
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -25,7 +26,7 @@ class ForwardViewModel @Inject constructor(
     var ussdApi: USSDApi,
     var map: HashMap<String, HashSet<String>>
 ) : ViewModel() {
-
+    private val mystate = MutableStateFlow<String>("")
 
     val userIntent = Channel<MainIntent>(Channel.UNLIMITED)
     private val _state = MutableStateFlow<MainState>(MainState.Idle)
@@ -73,7 +74,6 @@ class ForwardViewModel @Inject constructor(
 
     private fun disable() {
         viewModelScope.launch {
-
             enabled.value = false
             ussdApi.callUSSDInvoke(
                 disable_forWardCall,
@@ -102,7 +102,6 @@ class ForwardViewModel @Inject constructor(
         data class  ForWardIntent(var message:String) : MainIntent()
         object  DisableIntent :MainIntent()
     }
-
 
 }
 

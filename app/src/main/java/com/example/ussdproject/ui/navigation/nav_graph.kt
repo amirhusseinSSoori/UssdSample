@@ -24,7 +24,9 @@ import androidx.navigation.NavHostController
 import com.arad.ussdlibrary.USSDController
 import com.example.ussdproject.R
 import com.example.ussdproject.common.Constant.input_number
+import com.example.ussdproject.ui.forward.alertShowDetails
 import com.example.ussdproject.ui.forward.modify
+import com.example.ussdproject.util.AlertDialogComponent
 import com.example.ussdproject.util.checkForPermissions
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
@@ -36,8 +38,18 @@ import kotlinx.coroutines.launch
 @Composable
 fun Nav_graph() {
     val navController = rememberAnimatedNavController()
+    val viewModel = hiltViewModel<ForwardViewModel>()
     val scope = rememberCoroutineScope()
     val ctx = LocalContext.current
+
+
+
+
+    observeViewModel(viewModel)
+
+
+
+
     AnimatedNavHost(navController = navController, startDestination = NavScreen.Intro.route) {
         composable(NavScreen.Intro.route,
         enterTransition = { initial, _ ->
@@ -49,8 +61,6 @@ fun Nav_graph() {
                     ) + fadeIn(animationSpec = tween(700))
                 else -> null
             }
-
-
         }){
             Intro()
             scope.launch {
@@ -61,6 +71,10 @@ fun Nav_graph() {
                 }
             }
         }
+
+
+
+
         composable(NavScreen.Forward.route,
             exitTransition = { _, target ->
                 when (target.destination.route) {
@@ -72,18 +86,17 @@ fun Nav_graph() {
                     else -> null
                 }
             }) {
+
             val (text, SetText) = remember { mutableStateOf("") }
-            var enable by remember { mutableStateOf(true) }
-            val viewModel = hiltViewModel<ForwardViewModel>()
             val enableButton by viewModel.enable.observeAsState()
+            var enable by remember { mutableStateOf(true) }
             enableButton.let { enable = it!! }
-            val dialog by remember {
-                mutableStateOf(false)
-            }
+
+
+
 
             Surface(color = MaterialTheme.colors.background) {
-                Forward(
-                    viewModel = viewModel, text = text, onTextChange = SetText,
+                Forward(text = text, onTextChange = SetText,
                     ussdCall = {
                         checkAccesses(ctx = ctx, permission = {
                             if (text.trim() != "") {
@@ -96,8 +109,9 @@ fun Nav_graph() {
                         checkAccesses( ctx = ctx,permission = {
                             scope.launch {
                                 viewModel.userIntent.send(ForwardViewModel.MainIntent.DisableIntent)
-
                             }
+
+
                         })
                     },
 
@@ -105,7 +119,9 @@ fun Nav_graph() {
                 )
 
             }
+
         }
+
 
     }
 
@@ -122,7 +138,23 @@ fun checkAccesses( ctx: Context,permission: (ctx:Context) -> Unit) {
     }
 }
 
+@Composable
+private fun observeViewModel(forwardViewModel: ForwardViewModel) {
+    val ctx = LocalContext.current
+    val data by forwardViewModel.state.collectAsState()
+    data.let {
+        when (it) {
+            is ForwardViewModel.MainState.Idle -> Unit
+            is ForwardViewModel.MainState.ForWard -> {
+                alertShowDetails(ctx, modify(it.call))
+            }
+            is ForwardViewModel.MainState.Disable -> {
+                alertShowDetails(ctx,modify(it.disable))
+            }
 
+        }
+    }
+}
 
 
 
